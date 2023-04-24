@@ -1,5 +1,7 @@
 import mod_math as mod
 import numpy as np
+import pandas as pd
+import math
 
 def add(x1, y1, x2, y2):
     '''
@@ -143,7 +145,16 @@ def mult_finite(n, x, y, a, p):
 
 
 def order_point(x, y, a, p):
+    '''
+    Function that returns the order of a point in an elliptic curve
 
+    Parameters
+    ----------
+    x : coordinate x of the point
+    y : coordinate y of the point
+    a : value a of the curve
+    p : module p
+    '''
     ans = double_finite(x, y, a, p)
     i = 1
     while ans != False:
@@ -153,12 +164,44 @@ def order_point(x, y, a, p):
 
 
 def get_all_ec_points(a, b, p):
+    '''
+    Function that prints the calculations for the points on an elliptic curve
+
+    Parameters
+    ----------
+    a : value A of the elliptic curve
+    b : value B of the elliptic curve
+    p : module p
+    '''
     index = np.arange(p)
     results = (index**3 + index*a + b)%p
-    points = np.zeros()
-
     qua_res = (index**2)%p
+    points = {i : [] for i in index}
 
-    print(index)
-    print(results)
-    print(qua_res)
+    for i in range(len(qua_res)):
+        points[qua_res[i]].append(i)
+
+    ys = ['' for _ in range(p)]
+    n_points = 0
+    final_points = []
+    for i in range(p):
+        ys[i] = str(points[results[i]])
+
+        for j in range(len(points[results[i]])):
+            n_points+=1
+            final_points.append((i, points[results[i]][j]))
+
+    n_points += 1
+    final_points.append((math.inf, math.inf))
+    df = pd.DataFrame({'x': index, 'x^3 + Ax + B': results, 'y1, y2': ys}).set_index('x')
+    df2 = pd.DataFrame(final_points, columns=['x', 'y'])
+    df2.set_index(pd.Index(['']*n_points), inplace=True)
+    
+    print('Main table')
+    print(df)
+
+    print('Final points')
+    print(df2)
+
+    print('Number of points')
+    print(n_points) 

@@ -399,3 +399,4 @@ def pollard_p_one(N, a = 2, max_it = 100, k = 5):
         if 1 < d < N:
             return d
     return "Fail"
+

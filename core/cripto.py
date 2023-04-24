@@ -1,5 +1,6 @@
 # Alphabet and dictionary function
 import mod_math as mod
+import elliptic_curves as ec
 
 # Example of generation of alphabet
 alphabet = {chr(letter):letter-64 for letter in range(65,65+26)}
@@ -150,3 +151,87 @@ def rsa_dec(c, n, d):
 
 def digital_signature():
     pass
+
+
+def decipher_ec_elgamal(c1, c2, d, a, p):
+    '''
+    Function that deciphers a message using Elgamal algorithm
+
+    Parameters
+    ----------
+    c1 : tuple with the points that represent the ciphered message c1
+    c2 : tuple with the points that represent the ciphered message c2
+    d : private key
+    a : value A of an elliptic curve
+    p : module p
+
+    Returns
+    -------
+    x : coordinate x of the deciphered message
+    y : coordinate y of the deciphered message
+    '''
+    tmp = ec.mult_finite(d, c1[0], -c1[1], a, p)
+    x, y = ec.add_finite(c2[0], c2[1], tmp[0], tmp[1], p)
+
+    return x, y
+
+
+def ECDSA(x, y, a, q, d, k, n, m):
+    '''
+    Function that creates a digital signatures using ECDSA
+
+    Parameters
+    ----------
+    x : coordinate x of generator point
+    y : coordinate y of generator point
+    a : value A of the elliptic curve
+    q : module of the elliptic curve
+    d : private key
+    k : ephimeral key
+    n : order of the point
+    m : hash value
+
+    Returns
+    -------
+    tuple : tuple with the values r, s that forms the digital signature
+    '''
+    r, _ = ec.mult_finite(k, x, y, a, q)
+    s = (mod.inverse(k, n) * (m + d*r)) % n
+    
+    return r, s
+
+
+def verif_ECDSA(P, Q, kP, r, s, m, a, q, n):
+    '''
+    Function that verifies a digital signature
+
+    Paremeters
+    ----------
+    P : generator point on the elliptic curve
+    Q : public key
+    kP : Point that must match with the digital signature
+    r : value r of the digital signature
+    s : value s of the digital signature
+    m : hash value
+    a : value A of the elliptic curve
+    q : module of the elliptic curve
+    n : order of the point
+
+    Returns
+    -------
+    boolean : True if the digital signatures mathes, False otherwise
+    '''
+    w = mod.inverse(s, n)
+    u1 = m*w % n
+    u2 = w*r % n
+
+    tmp1 = ec.mult_finite(u1, P[0], P[1], a, q)
+    tmp2 = ec.mult_finite(u2, Q[0], Q[1], a, q)
+
+    X = ec.add_finite(tmp1[0], tmp1[1], tmp2[0], tmp2[1], q)
+    
+    if X[0] == kP[0] and X[1] == kP[1]:
+        return True
+    
+    return False
+
