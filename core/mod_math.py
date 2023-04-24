@@ -1,3 +1,4 @@
+import numpy as np
 '''
 Description for this file blalblabllbalal 
 '''
@@ -14,9 +15,9 @@ def gcd(a, b):
     Returns
     -------
     tuple of size 3 with (g, u, v) where
-        g : greatest common divisor
-        u : first Bezout's coefficient
-        v : second Bezout's coeffient
+    g : greatest common divisor
+    u : first Bezout's coefficient
+    v : second Bezout's coeffient
     """
     if b == 0:
         return (a, 1, 0)
@@ -155,7 +156,7 @@ def discrete_log(a, b, p):
         i += 1
     return i-1
 
-def shanks_algorithm(a, b, p):
+def shanks_algorithm(a, b, p, verbose = False):
     '''
     Calculates the discrete logarithm using the Shanks algorithm
 
@@ -170,10 +171,19 @@ def shanks_algorithm(a, b, p):
     An integer that is the discrete logarithm
     '''
     order = multiplicative_order(b, p)
+    
+    if verbose:
+        print(f'Multiplicative order of {b} module {p}: {order}')
+
     list1 = []
     list2 = []
     n = 1 + int(order**(1/2))
     u = (inverse(b, p)**n)%p
+
+    if verbose:
+        print(f'Value of g inverse: {inverse(b, p)}')
+        print(f'Value of n: {n}')
+        print(f'Value of u: {u}')
 
     tmp = 1
     tmp2 = a
@@ -188,9 +198,17 @@ def shanks_algorithm(a, b, p):
         list1.append(tmp)
         list2.append(tmp2)
 
+    if verbose:
+        print(f'List 1: {list1}')
+        print(f'Lista 2: {list2}')
+
     collision = set(list1).intersection(list2)
     index1 = [list1.index(x) for x in collision][0]
     index2 = [list2.index(x) for x in collision][0]
+
+    if verbose:
+        print(f'Indexes of collision: {index1, index2}')
+
     return index1 + index2*n
 
 def inverse(n, p):
@@ -212,8 +230,21 @@ def inverse(n, p):
     '''
     g, u, _ = gcd(n, p)
     if g != 1:
-        raise ValueError
+        return False
     return u % p
+
+
+def quadratic_residues(numbers, p):
+    '''
+    Function that returns a list with the quadratic residues 
+    '''
+    ans = dict([(i, []) for i in range(p)])
+    for i in range(p):
+        for j in range(p):
+            if (j**2)%p == numbers[i]:
+                ans[i].append(j)
+
+    return ans
 
 
 def is_prime(n):
@@ -285,3 +316,86 @@ def chinese_remainder(numbers, modules):
         ans = (ans + numbers[i] * tmp * inverse(tmp, modules[i])) % m
 
     return (ans, m)
+
+def is_carmichael(n):
+    '''
+    Returns True if n is a carmichael number, False otherwise
+
+    Parameters
+    ----------
+    n : Number to check
+
+    Returns
+    -------
+    True if n is a carmichael number, False otherwise
+    '''
+    if is_prime(n):
+        return False
+    
+    for i in range(1, n-1):
+        if i != fast_pow(i, n, n):
+            return False
+    return True
+
+
+def miller_rabin_test(n, a=2):
+    '''
+    Uses Miller Rabin test to check if a number is composite 
+
+    Parameters
+    ----------
+    n : Number to check 
+    a : Base to test. 2 if None parameter is passed
+
+    Returns
+    -------
+    Returns True if the number is composite, False otherwise
+
+    Notes
+    -----   
+    If the function returns false, it does not mean that n is a prime, just that it is a chance that it is
+    '''
+    if n%2 == 0 or (gcd(a, n)[0] > 1 and gcd(a, n)[0] < n):
+        return True
+    
+    q = n-1
+    k = 0
+    while q%2 == 0:
+        k+=1
+        q//=2
+
+    a = fast_pow(a, q, n)
+    if a%n == 1:
+        return False
+    
+    for i in range(k):
+        if a%n == n-1:
+            return False
+        a = (a**2) % n
+
+    return True
+
+
+def pollard_p_one(N, a = 2, max_it = 100, k = 5):
+    '''
+    Uses pollard p-1 algorithm to get one prime factor of N
+
+    Parameters
+    ----------
+    N : Number to decompose in prime factors
+    a : Base to test
+    max_it : Numbers of iterations. 100 if none parameter is passed
+    k : How often the gcd is calculated
+
+    Returns
+    -------
+    One prime number that is a factor of N or -1 if none value was found
+    '''
+    d = 1
+    for i in range(2, max_it):
+        a = fast_pow(a, i, N)
+        if i%k == 0:
+            d = gcd(a-1, N)[0]
+        if 1 < d < N:
+            return d
+    return "Fail"

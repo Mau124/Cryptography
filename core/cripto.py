@@ -146,3 +146,7 @@ def rsa_dec(c, n, d):
     m = [pow(c[i],d,n) for i in range(len(c))]
     
     return m
+
+
+def digital_signature():
+    pass
