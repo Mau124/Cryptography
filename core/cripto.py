@@ -1,6 +1,6 @@
 # Alphabet and dictionary function
-import mod_math as mod
-import elliptic_curves as ec
+from . import mod_math as mod
+from . import elliptic_curves as ec
 
 # Example of generation of alphabet
 alphabet = {chr(letter):letter-64 for letter in range(65,65+26)}

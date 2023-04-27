@@ -1,4 +1,4 @@
-import mod_math as mod
+from . import mod_math as mod
 import numpy as np
 import pandas as pd
 import math
@@ -172,6 +172,12 @@ def get_all_ec_points(a, b, p):
     a : value A of the elliptic curve
     b : value B of the elliptic curve
     p : module p
+
+    Returns
+    -------
+    DataFrame with processing table
+    Dataframe with points in x and y
+    Integer with the number of points
     '''
     index = np.arange(p)
     results = (index**3 + index*a + b)%p
@@ -196,12 +202,5 @@ def get_all_ec_points(a, b, p):
     df = pd.DataFrame({'x': index, 'x^3 + Ax + B': results, 'y1, y2': ys}).set_index('x')
     df2 = pd.DataFrame(final_points, columns=['x', 'y'])
     df2.set_index(pd.Index(['']*n_points), inplace=True)
-    
-    print('Main table')
-    print(df)
 
-    print('Final points')
-    print(df2)
-
-    print('Number of points')
-    print(n_points) 
+    return df, df2, n_points
